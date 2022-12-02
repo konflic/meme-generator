@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-GET_FIRST_LINE, GET_SECOND_LINE = range(2)
+GET_FIRST_LINE, GET_SECOND_LINE, GET_PICTURE = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -33,6 +33,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"Я бот который умеет делать надписи на фотографиях. "
         f"Присылай мне картинку и скажи что на ней написать.",
     )
+
+
+async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("Давай сделаем мемасик! Присылай картинку!")
+    return GET_PICTURE
 
 
 async def dog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -45,40 +50,34 @@ async def dog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def download_attachment(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     attachments = update.effective_message.effective_attachment
     attachment = attachments[-1] if type(attachments) == list else attachments
     file_info = await context.bot.get_file(file_id=attachment.file_id)
     response = requests.get(file_info.file_path, allow_redirects=True)
-
+    os.makedirs(f"tmp/{update.effective_user.username}", exist_ok=True)
     tmp_file_path = f"tmp/{update.effective_user.username}/{uuid.uuid4()}.webp"
     open(tmp_file_path, "wb").write(response.content)
     context.user_data["picture_path"] = tmp_file_path
-
     await update.message.reply_text("Получил картину. Что напишем сверху?")
-
     return GET_FIRST_LINE
 
 
 async def get_first_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["first_line"] = update.message.text
     await update.message.reply_text("Понял. Что напишем внизу?")
-
     return GET_SECOND_LINE
 
 
 async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["second_line"] = update.message.text
-
     path = MemeEngine(f"./tmp/{update.effective_user.username}").make_meme(
         context.user_data["picture_path"],
         context.user_data["first_line"].strip(),
         context.user_data["second_line"].strip(),
     )
-
     os.remove(context.user_data["picture_path"])
-
     await context.bot.send_photo(
         chat_id=update.message.chat_id, photo=path, caption="По-красоте..."
     )
@@ -93,19 +92,26 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
+async def location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"Привет, ты сейчас в {update.message.location}")
+
+
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("dog", dog))
 
+    application.add_handler(MessageHandler(filters.LOCATION, location))
+
     application.add_handler(
         ConversationHandler(
-            entry_points=[
-                MessageHandler(filters.ATTACHMENT, download_attachment),
-                MessageHandler(filters.FORWARDED, download_attachment),
-            ],
+            entry_points=[CommandHandler("mem", mem)],
             states={
+                GET_PICTURE: [
+                    MessageHandler(filters.ATTACHMENT, download_attachment),
+                    MessageHandler(filters.FORWARDED, download_attachment),
+                ],
                 GET_FIRST_LINE: [
                     MessageHandler(filters.TEXT, get_first_line),
                 ],
