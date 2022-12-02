@@ -1,7 +1,7 @@
 import os
 
 with open("TOKEN") as f:
-    TOKEN = f.read()
+    TOKEN = f.read().strip()
 
 import logging
 import requests
