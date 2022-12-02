@@ -1,26 +1,62 @@
-import hashlib
-import time
 import os
 import pathlib
 
 from PIL import Image, ImageDraw, ImageFont
 
+FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../stuff/arial.ttf")
+
 
 class MemeEngine:
-
     def __init__(self, folder):
         self.folder = pathlib.Path(folder).resolve()
 
-    def make_meme(self, img, quote_body, quote_author, body_font="arial.ttf"):
-        # Creating unique name for meme
-        meme_filename = hashlib.md5(f"{quote_body}{quote_author}{time.time()}".encode()).hexdigest()
+    def make_meme(self, img, quote_first_line, quote_second_line, font=FONT):
+        meme_filename = os.path.basename(img).split(".")[0]
 
         image = Image.open(pathlib.Path(img).resolve())
+        image_width, image_height = image.size
 
-        image_draw = ImageDraw.Draw(image)
-        body_font = ImageFont.truetype(body_font, size=50)
-        image_draw.text((100, 100), quote_body, font=body_font)
-        image_draw.text((200, 300), quote_author, font=body_font)
+        draw = ImageDraw.Draw(image)
+
+        proportion = 10
+        body_font = ImageFont.truetype(font, size=int(image_height / proportion))
+        _, _, text_w, text_h = draw.textbbox((0, 0), quote_first_line, font=body_font)
+
+        while image_width < text_w + 20:
+            proportion += 0.2
+            body_font = ImageFont.truetype(font, size=int(image_height / proportion))
+            _, _, text_w, text_h = draw.textbbox(
+                (0, 0), quote_first_line, font=body_font
+            )
+
+        draw.text(
+            ((image_width - text_w) / 2, 20),
+            quote_first_line,
+            font=body_font,
+            align="center",
+            stroke_width=3,
+            stroke_fill="black",
+        )
+
+        proportion = 10
+        body_font = ImageFont.truetype(font, size=int(image_height / proportion))
+        _, _, text_w, text_h = draw.textbbox((0, 0), quote_second_line, font=body_font)
+
+        while image_width < text_w + 20:
+            proportion += 0.5
+            body_font = ImageFont.truetype(font, size=int(image_height / proportion))
+            _, _, text_w, text_h = draw.textbbox(
+                (0, 0), quote_second_line, font=body_font
+            )
+
+        draw.text(
+            ((image_width - text_w) / 2, image_height - 20 - image_height / proportion),
+            quote_second_line,
+            font=body_font,
+            stroke_fill="black",
+            stroke_width=3,
+            align="center",
+        )
 
         os.makedirs(self.folder, exist_ok=True)
 
@@ -31,7 +67,9 @@ class MemeEngine:
 
 
 if __name__ == "__main__":
-    image_path = "../_data/photos/dog/xander_1.jpg"
+    # Quick test
     m = MemeEngine("./tmp")
-    path = m.make_meme(image_path, "This is test text", "Me")
+    path = m.make_meme(
+        "../stuff/26am.jpg", "This fdaf df dfdfdfd df fd fdfddddd fd fdfdf df df", "Me"
+    )
     print(path)
