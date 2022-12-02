@@ -1,0 +1,25 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    - printenv
+    - docker-compose down
+    - docker kill $(docker ps -q) || true
+    - docker system prune -a -f
+    - docker-compose build
+  tags:
+    - yandex
+  except:
+    - pipeline
+
+deploy:
+  stage: deploy
+  script:
+    - docker-compose up -d
+  tags:
+    - yandex
+  except:
+    - pipeline
