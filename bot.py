@@ -29,6 +29,8 @@ GET_FIRST_LINE, GET_SECOND_LINE, GET_PICTURE, START_ROUTES = range(4)
 class Commands:
     CANCEL = "Передумал"
     MAKE_MEM = "Сделать мем"
+    TEMPLATES = "Шаблоны"
+    NOTHING = "ничего"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -37,7 +39,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(
         f"Привет, {user.username}! "
         f"Я бот который умеет делать надписи на фотографиях. "
-        f"Используй /mem Присылай мне картинку и скажи что на ней написать.",
+        f"Используй /mem Присылай мне картинку и скажи что на ней написать. "
+        f"Готовы шаблоны мемасиков есть тут {'https://t.me/addstickers/memaker_templates'}",
         reply_markup=ReplyKeyboardMarkup(
             [[Commands.MAKE_MEM]], one_time_keyboard=True, resize_keyboard=True
         ),
@@ -47,14 +50,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Давай сделаем мемасик. Присылай картинку!",
-        reply_markup=ReplyKeyboardMarkup([[Commands.CANCEL]], resize_keyboard=True),
+        reply_markup=ReplyKeyboardMarkup(
+            [[Commands.CANCEL], [Commands.TEMPLATES]], resize_keyboard=True
+        ),
     )
 
     return GET_PICTURE
 
 
 async def download_attachment(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     attachments = update.effective_message.effective_attachment
     attachment = attachments[-1] if type(attachments) == list else attachments
@@ -67,20 +72,28 @@ async def download_attachment(
     open(tmp_file_path, "wb").write(response.content)
     context.user_data["picture_path"] = tmp_file_path
 
-    await update.message.reply_text("Получил картину. Что напишем сверху?",
-                                    reply_markup=ReplyKeyboardMarkup([[Commands.CANCEL]], resize_keyboard=True))
+    await update.message.reply_text(
+        "Получил картину. Что напишем сверху?",
+        reply_markup=ReplyKeyboardMarkup(
+            [[Commands.CANCEL], [Commands.NOTHING]], resize_keyboard=True
+        ),
+    )
 
     return GET_FIRST_LINE
 
 
 async def get_first_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["first_line"] = update.message.text
+    if update.message.text == Commands.NOTHING:
+        context.user_data["first_line"] = ""
     await update.message.reply_text("Понял. Что напишем внизу?")
     return GET_SECOND_LINE
 
 
 async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["second_line"] = update.message.text
+    if update.message.text == Commands.NOTHING:
+        context.user_data["second_line"] = ""
     path = MemeEngine(f"./tmp/{update.effective_user.username}").make_meme(
         context.user_data["picture_path"],
         context.user_data["first_line"].strip().upper(),
@@ -116,33 +129,31 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
-# Tests
-async def dog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    def get_url():
-        contents = requests.get("https://random.dog/woof.json").json()
-        url = contents["url"]
-        return url
-
-    await context.bot.send_photo(chat_id=update.message.chat_id, photo=get_url())
+async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_html(
+        text=f"Туть: https://t.me/addstickers/memaker_templates",
+        reply_to_message_id=update.message.message_id,
+    )
 
 
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
 
-    # Tests
-    application.add_handler(CommandHandler("dog", dog))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(
+        MessageHandler(filters.Regex(Commands.TEMPLATES), templates)
+    )
 
     application.add_handler(
         ConversationHandler(
             entry_points=[
-                MessageHandler(filters.Regex("Сделать мем"), mem),
+                MessageHandler(filters.Regex(Commands.MAKE_MEM), mem),
             ],
             states={
                 GET_PICTURE: [
+                    MessageHandler(filters.Regex(Commands.CANCEL), cancel),
                     MessageHandler(filters.ATTACHMENT, download_attachment),
                     MessageHandler(filters.FORWARDED, download_attachment),
-                    MessageHandler(filters.Regex(Commands.CANCEL), cancel)
                 ],
                 GET_FIRST_LINE: [
                     MessageHandler(filters.Regex(Commands.CANCEL), cancel),
@@ -153,9 +164,7 @@ def main() -> None:
                     MessageHandler(filters.TEXT, get_second_line),
                 ],
             },
-            fallbacks=[
-                MessageHandler(filters.Regex(Commands.CANCEL), cancel)
-            ],
+            fallbacks=[MessageHandler(filters.Regex(Commands.CANCEL), cancel)],
         ),
     )
 
