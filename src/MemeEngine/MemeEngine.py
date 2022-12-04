@@ -14,7 +14,9 @@ PORTION_STEP = 0.5
 class MemeEngine:
     def __init__(self, folder):
         self.folder = pathlib.Path(folder).resolve()
-        self.font = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../stuff/arial.ttf")
+        self.font = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "../stuff/arial.ttf"
+        )
         self.image_height = None
 
     def __set_image_height(self, image_height):
@@ -56,7 +58,9 @@ class MemeEngine:
             if full_text_w / IMAGE_WIDTH > 1.5:
                 total_chars = len(text)
                 chars_per_line = math.ceil(total_chars / 2)
-                wrapped_lines = textwrap.wrap(text, width=chars_per_line, break_long_words=False)
+                wrapped_lines = textwrap.wrap(
+                    text, width=chars_per_line, break_long_words=False
+                )
 
                 self.proportion += len(wrapped_lines)
 
@@ -104,12 +108,10 @@ class MemeEngine:
 
 
 if __name__ == "__main__":
-    VERY_LONG_LINE = (
-        "Когда решил круто затусить на чиле под новый год"
-    )
+    VERY_LONG_LINE = "Когда решил круто затусить на чиле под новый год"
 
     LONG_LINE = "This very very very long long long"
-    SHORT = "когда не разобралась"
+    SHORT = "но потом всё пошло через жопу"
 
     m = MemeEngine("./tmp")
     # m.make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, LONG_LINE)
