@@ -56,7 +56,7 @@ class MemeEngine:
             if full_text_w / IMAGE_WIDTH > 1.5:
                 total_chars = len(text)
                 chars_per_line = math.ceil(total_chars / 2)
-                wrapped_lines = textwrap.wrap(text, width=chars_per_line)
+                wrapped_lines = textwrap.wrap(text, width=chars_per_line, break_long_words=False)
 
                 self.proportion += len(wrapped_lines)
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     )
 
     LONG_LINE = "This very very very long long long"
-    SHORT = "This very very short"
+    SHORT = "когда не разобралась"
 
     m = MemeEngine("./tmp")
     # m.make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, LONG_LINE)
