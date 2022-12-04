@@ -1,5 +1,7 @@
 import os
 
+from telegram.constants import MenuButtonType
+
 with open("TOKEN") as f:
     TOKEN = f.read().strip()
 
@@ -8,14 +10,15 @@ import requests
 import uuid
 
 from src.MemeEngine import MemeEngine
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, MenuButton, KeyboardButton, \
+    ReplyKeyboardMarkup, MenuButtonCommands
 from telegram.ext import (
     Application,
     CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
-    ConversationHandler,
+    ConversationHandler, CallbackQueryHandler,
 )
 
 logging.basicConfig(
@@ -23,30 +26,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-GET_FIRST_LINE, GET_SECOND_LINE, GET_PICTURE = range(3)
+GET_FIRST_LINE, GET_SECOND_LINE, GET_PICTURE, START_ROUTES = range(4)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
+
+    keyboard = [["Сделать мем"]]
+
     await update.message.reply_html(
-        f"Привет, {user.mention_html()}! "
+        f"Привет, {user.username}! "
         f"Я бот который умеет делать надписи на фотографиях. "
-        f"Присылай мне картинку и скажи что на ней написать.",
+        f"Используй /mem Присылай мне картинку и скажи что на ней написать.",
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
+
+    return GET_PICTURE
 
 
 async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Давай сделаем мемасик! Присылай картинку!")
     return GET_PICTURE
-
-
-async def dog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    def get_url():
-        contents = requests.get("https://random.dog/woof.json").json()
-        url = contents["url"]
-        return url
-
-    await context.bot.send_photo(chat_id=update.message.chat_id, photo=get_url())
 
 
 async def download_attachment(
@@ -74,39 +74,55 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     context.user_data["second_line"] = update.message.text
     path = MemeEngine(f"./tmp/{update.effective_user.username}").make_meme(
         context.user_data["picture_path"],
-        context.user_data["first_line"].strip(),
-        context.user_data["second_line"].strip(),
+        context.user_data["first_line"].strip().upper(),
+        context.user_data["second_line"].strip().upper(),
     )
+
     os.remove(context.user_data["picture_path"])
+
+    keyboard = [["Сделать мем"]]
+
     await context.bot.send_photo(
-        chat_id=update.message.chat_id, photo=path, caption="По-красоте..."
+        chat_id=update.message.chat_id,
+        photo=path,
+        caption="По-красоте...",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard, one_time_keyboard=True
+        )
     )
     context.user_data.clear()
+
     return ConversationHandler.END
 
 
-async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user_data = context.user_data
-    user_data.clear()
-    await update.message.reply_text("Ничего не понял. Давай потом!")
-    return ConversationHandler.END
-
-
+# Tests
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Привет, ты сейчас в {update.message.location}")
 
 
+async def dog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    def get_url():
+        contents = requests.get("https://random.dog/woof.json").json()
+        url = contents["url"]
+        return url
+
+    await context.bot.send_photo(chat_id=update.message.chat_id, photo=get_url())
+
+
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
-
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("dog", dog))
 
+    # Tests
     application.add_handler(MessageHandler(filters.LOCATION, location))
+    application.add_handler(CommandHandler("dog", dog))
 
     application.add_handler(
         ConversationHandler(
-            entry_points=[CommandHandler("mem", mem)],
+            entry_points=[
+                CommandHandler("mem", mem),
+                MessageHandler(filters.Regex("Сделать мем"), mem)
+            ],
             states={
                 GET_PICTURE: [
                     MessageHandler(filters.ATTACHMENT, download_attachment),
@@ -119,7 +135,7 @@ def main() -> None:
                     MessageHandler(filters.TEXT, get_second_line),
                 ],
             },
-            fallbacks=[MessageHandler(filters.Regex("^Done$"), done)],
+            fallbacks=[CommandHandler("start", start)],
         ),
     )
 
