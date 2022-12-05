@@ -91,8 +91,8 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         context.user_data["second_line"] = ""
     path = MemeEngine(f"./tmp/{update.effective_user.username}").make_meme(
         context.user_data["picture_path"],
-        context.user_data["first_line"].strip().upper(),
-        context.user_data["second_line"].strip().upper(),
+        context.user_data["first_line"].strip(),
+        context.user_data["second_line"].strip(),
     )
 
     os.remove(context.user_data["picture_path"])

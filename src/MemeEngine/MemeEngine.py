@@ -1,7 +1,5 @@
 import os
 import pathlib
-import textwrap
-import math
 
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageFont import FreeTypeFont
@@ -32,6 +30,8 @@ class MemeEngine:
         return ImageFont.truetype(self.font, size=font_size)
 
     def draw_line(self, image: Image, text: str, position: str):
+        text = text.strip().upper()
+
         draw = ImageDraw.Draw(image)
         IMAGE_WIDTH, IMAGE_HEIGHT = image.size
         self.proportion = PORTION_OF_HEIGHT
@@ -44,7 +44,7 @@ class MemeEngine:
         )
 
         self.__set_image_height(IMAGE_HEIGHT)
-        STROKE_WIDTH = 2 + int(IMAGE_HEIGHT / 400)
+        STROKE_WIDTH = 2 + int(IMAGE_HEIGHT / 500)
 
         _, _, full_text_w, full_text_h = draw.multiline_textbbox(
             (IMAGE_WIDTH * BORDERS_RATE, IMAGE_HEIGHT * BORDERS_RATE),
@@ -56,13 +56,11 @@ class MemeEngine:
 
             # Если изображение больше чем в 1.5 раза, то делим на 2
             if full_text_w / IMAGE_WIDTH > 1.5:
-                total_chars = len(text)
-                chars_per_line = math.ceil(total_chars / 2)
-                wrapped_lines = textwrap.wrap(
-                    text, width=chars_per_line, break_long_words=False
-                )
+                words = text.split()
+                half = int(len(words) / 2)
+                wrapped_lines = [" ".join(words[:half]), " ".join(words[half:])]
 
-                self.proportion += len(wrapped_lines)
+                self.proportion += 1
 
                 text = "\n".join(wrapped_lines)
                 _, _, full_text_w, full_text_h = draw.multiline_textbbox(
@@ -73,7 +71,7 @@ class MemeEngine:
 
         # Итеративное уменьшение размера текста
         while full_text_w > IMAGE_WIDTH:
-            self.proportion += 0.2
+            self.proportion += 0.5
             _, _, full_text_w, full_text_h = draw.multiline_textbbox(
                 (0, 0), text, font=self.body_font()
             )
@@ -82,7 +80,7 @@ class MemeEngine:
         y = BORDER
 
         if position == "bottom":
-            y = (IMAGE_HEIGHT - full_text_h) - BORDER / 2
+            y = IMAGE_HEIGHT - full_text_h
 
         draw.multiline_text(
             (x, y),
@@ -111,9 +109,9 @@ if __name__ == "__main__":
     VERY_LONG_LINE = "Когда решил круто затусить на чиле под новый год"
 
     LONG_LINE = "This very very very long long long"
-    SHORT = "но потом всё пошло через жопу"
+    SHORT = "но потом всё"
 
     m = MemeEngine("./tmp")
-    # m.make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, LONG_LINE)
-    # m.make_meme("../stuff/26am_2.jpg", VERY_LONG_LINE, SHORT)
-    m.make_meme("../stuff/vertical.jpg", VERY_LONG_LINE, SHORT)
+    # m.make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, SHORT)
+    # m.make_meme("../stuff/26am_2.jpg", SHORT, VERY_LONG_LINE)
+    m.make_meme("../stuff/vertical.jpg", VERY_LONG_LINE, VERY_LONG_LINE)
