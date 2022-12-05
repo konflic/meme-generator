@@ -39,8 +39,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(
         f"Привет, {user.username}! "
         f"Я бот который умеет делать надписи на фотографиях. "
-        f"Используй /mem Присылай мне картинку и скажи что на ней написать. "
-        f"Готовы шаблоны мемасиков есть тут {'https://t.me/addstickers/memaker_templates'}",
+        f"Присылай мне картинку и скажи что на ней написать. "
+        f"Готовы шаблоны мемасиков: https://t.me/addstickers/memaker_templates",
         reply_markup=ReplyKeyboardMarkup(
             [[Commands.MAKE_MEM]], one_time_keyboard=True, resize_keyboard=True
         ),
@@ -131,7 +131,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_html(
-        text=f"Туть: https://t.me/addstickers/memaker_templates",
+        text=f"Тут: https://t.me/addstickers/memaker_templates",
         reply_to_message_id=update.message.message_id,
     )
 
