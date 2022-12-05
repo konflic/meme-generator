@@ -18,11 +18,6 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
-
 GET_FIRST_LINE, GET_SECOND_LINE, GET_PICTURE, START_ROUTES = range(4)
 
 
@@ -59,7 +54,7 @@ async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def download_attachment(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     attachments = update.effective_message.effective_attachment
     attachment = attachments[-1] if type(attachments) == list else attachments
