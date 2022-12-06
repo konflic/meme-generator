@@ -1,3 +1,4 @@
+import math
 import os
 import pathlib
 
@@ -57,7 +58,13 @@ class MemeEngine:
             # Если изображение больше чем в 1.5 раза, то делим на 2
             if full_text_w / IMAGE_WIDTH > 1.5:
                 words = text.split()
-                half = int(len(words) / 2)
+                half = math.floor(len(words) / 2)
+                first_part = " ".join(words[:half])
+                second_part = " ".join(words[half:])
+
+                if len(first_part) < len(second_part):
+                    half += 1
+
                 wrapped_lines = [" ".join(words[:half]), " ".join(words[half:])]
 
                 self.proportion += 1
@@ -106,12 +113,11 @@ class MemeEngine:
 
 
 if __name__ == "__main__":
-    VERY_LONG_LINE = "Когда решил круто затусить на чиле под новый год"
+    VERY_LONG_LINE = "nfr b vtn ybrjulf brbrkdfjdfjgd dfdfds"
 
     LONG_LINE = "This very very very long long long"
     SHORT = "но потом всё"
 
-    m = MemeEngine("./tmp")
-    # m.make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, SHORT)
-    # m.make_meme("../stuff/26am_2.jpg", SHORT, VERY_LONG_LINE)
-    m.make_meme("../stuff/vertical.jpg", VERY_LONG_LINE, VERY_LONG_LINE)
+    MemeEngine("./tmp").make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, SHORT)
+    MemeEngine("./tmp").make_meme("../stuff/26am_2.jpg", SHORT, VERY_LONG_LINE)
+    MemeEngine("./tmp").make_meme("../stuff/vertical.jpg", VERY_LONG_LINE, VERY_LONG_LINE)
