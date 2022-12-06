@@ -55,7 +55,7 @@ async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def download_attachment(
         update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    if update.effective_message.photo:
+    if update.effective_message.photo or update.effective_message.sticker:
         attachments = update.effective_message.effective_attachment
         attachment = attachments[-1] if type(attachments) == list else attachments
         file_info = await context.bot.get_file(file_id=attachment.file_id)
@@ -152,7 +152,7 @@ def main() -> None:
             states={
                 GET_PICTURE: [
                     MessageHandler(filters.Regex(Commands.CANCEL), cancel),
-                    MessageHandler(filters.PHOTO, download_attachment),
+                    MessageHandler(filters.ATTACHMENT, download_attachment),
                     MessageHandler(filters.FORWARDED, download_attachment),
                 ],
                 GET_FIRST_LINE: [

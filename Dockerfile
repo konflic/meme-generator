@@ -12,6 +12,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN ls -la
-
 CMD ["python", "bot.py"]

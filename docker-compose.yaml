@@ -4,8 +4,12 @@ services:
 
   bot:
     restart: always
-    environment:
-      - TOKEN=${TOKEN}
+    volumes:
+      - ./tmp:/bot/tmp
     build:
       context: .
       dockerfile: Dockerfile
+
+volumes:
+  tmp:
+    external: true
