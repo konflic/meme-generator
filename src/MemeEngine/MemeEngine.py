@@ -8,6 +8,7 @@ from PIL.ImageFont import FreeTypeFont
 BORDERS_RATE = 0.02
 PORTION_OF_HEIGHT = 12
 PORTION_STEP = 0.5
+MAX_SIZE = 640
 
 
 class MemeEngine:
@@ -21,6 +22,24 @@ class MemeEngine:
     def __set_image_height(self, image_height):
         if self.image_height is None:
             self.image_height = int(image_height)
+
+    def downsize_image(self, img: Image):
+        width, height = img.size
+        base = MAX_SIZE
+
+        if width <= MAX_SIZE and height <= MAX_SIZE:
+            return img
+
+        if width <= height:
+            wpercent = (base / float(height))
+            wsize = int((float(width) * float(wpercent)))
+            img = img.resize((wsize, base), Image.Resampling.LANCZOS)
+        else:
+            wpercent = (base / float(width))
+            hsize = int((float(height) * float(wpercent)))
+            img = img.resize((base, hsize), Image.Resampling.LANCZOS)
+
+        return img
 
     def body_font(self, image_height: int = None) -> FreeTypeFont:
         if image_height is None:
@@ -101,12 +120,14 @@ class MemeEngine:
     def make_meme(self, img, quote_first_line, quote_second_line):
         meme_filename = os.path.basename(img).split(".")[0]
         image = Image.open(pathlib.Path(img).resolve())
+        image = self.downsize_image(image)
 
         self.draw_line(image=image, text=quote_first_line, position="top")
         self.draw_line(image=image, text=quote_second_line, position="bottom")
 
         os.makedirs(self.folder, exist_ok=True)
         meme_path = f"{self.folder}{os.sep}{meme_filename}.png"
+
         image.save(meme_path)
 
         return meme_path
