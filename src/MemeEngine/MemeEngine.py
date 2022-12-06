@@ -56,7 +56,7 @@ class MemeEngine:
         if full_text_w > IMAGE_WIDTH:
 
             # Если изображение больше чем в 1.5 раза, то делим на 2
-            if full_text_w / IMAGE_WIDTH > 1.5:
+            if full_text_w / IMAGE_WIDTH > 1.4:
                 words = text.split()
                 half = math.floor(len(words) / 2)
                 first_part = " ".join(words[:half])

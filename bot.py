@@ -3,7 +3,6 @@ import os
 with open("TOKEN") as f:
     TOKEN = f.read().strip()
 
-import logging
 import requests
 import uuid
 
@@ -56,25 +55,27 @@ async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def download_attachment(
         update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    attachments = update.effective_message.effective_attachment
-    attachment = attachments[-1] if type(attachments) == list else attachments
-    file_info = await context.bot.get_file(file_id=attachment.file_id)
-    response = requests.get(file_info.file_path, allow_redirects=True)
+    if update.effective_message.photo:
+        attachments = update.effective_message.effective_attachment
+        attachment = attachments[-1] if type(attachments) == list else attachments
+        file_info = await context.bot.get_file(file_id=attachment.file_id)
 
-    os.makedirs(f"tmp/{update.effective_user.username}", exist_ok=True)
-    tmp_file_path = f"tmp/{update.effective_user.username}/{uuid.uuid4()}.webp"
+        response = requests.get(file_info.file_path, allow_redirects=True)
 
-    open(tmp_file_path, "wb").write(response.content)
-    context.user_data["picture_path"] = tmp_file_path
+        os.makedirs(f"tmp/{update.effective_user.username}", exist_ok=True)
+        tmp_file_path = f"tmp/{update.effective_user.username}/{uuid.uuid4()}.webp"
 
-    await update.message.reply_text(
-        "Получил картину. Что напишем сверху?",
-        reply_markup=ReplyKeyboardMarkup(
-            [[Commands.CANCEL], [Commands.NOTHING]], resize_keyboard=True
-        ),
-    )
+        open(tmp_file_path, "wb").write(response.content)
+        context.user_data["picture_path"] = tmp_file_path
 
-    return GET_FIRST_LINE
+        await update.message.reply_text(
+            "Получил картину. Что напишем сверху?",
+            reply_markup=ReplyKeyboardMarkup(
+                [[Commands.CANCEL], [Commands.NOTHING]], resize_keyboard=True
+            ),
+        )
+
+        return GET_FIRST_LINE
 
 
 async def get_first_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -131,6 +132,10 @@ async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def stats():
+    pass
+
+
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
@@ -147,7 +152,7 @@ def main() -> None:
             states={
                 GET_PICTURE: [
                     MessageHandler(filters.Regex(Commands.CANCEL), cancel),
-                    MessageHandler(filters.ATTACHMENT, download_attachment),
+                    MessageHandler(filters.PHOTO, download_attachment),
                     MessageHandler(filters.FORWARDED, download_attachment),
                 ],
                 GET_FIRST_LINE: [
