@@ -21,10 +21,11 @@ GET_FIRST_LINE, GET_SECOND_LINE, GET_PICTURE, START_ROUTES = range(4)
 
 
 class Commands:
-    CANCEL = "Передумал"
-    MAKE_MEM = "Сделать мем"
-    TEMPLATES = "Шаблоны"
-    NOTHING = "ничего"
+    CANCEL = "/отмена"
+    MAKE_MEM = "/мем"
+    MAKE_DEMOTIVATOR = "/демотиватор"
+    TEMPLATES = "/шаблоны"
+    NOTHING = "/ничего"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -32,11 +33,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await update.message.reply_html(
         f"Привет, {user.username}! "
-        f"Я бот который умеет делать надписи на фотографиях. "
-        f"Присылай мне картинку и скажи что на ней написать. "
-        f"Готовы шаблоны мемасиков: https://t.me/addstickers/memaker_templates",
+        f"Я бот который умеет делать мемасики. "
+        f"Присылай мне картинку и скажи что на ней написать",
         reply_markup=ReplyKeyboardMarkup(
-            [[Commands.MAKE_MEM]], one_time_keyboard=True, resize_keyboard=True
+            [[Commands.MAKE_MEM, Commands.MAKE_DEMOTIVATOR]],
+            one_time_keyboard=True,
+            resize_keyboard=True,
         ),
     )
 
@@ -45,15 +47,33 @@ async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Давай сделаем мемасик. Присылай картинку!",
         reply_markup=ReplyKeyboardMarkup(
-            [[Commands.CANCEL], [Commands.TEMPLATES]], resize_keyboard=True
+            [
+                [Commands.TEMPLATES],
+                [Commands.CANCEL],
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True,
         ),
     )
+    return GET_PICTURE
 
+
+async def demotivator(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        "Давай замутим демотиватор. Присылай картинку!",
+        reply_markup=ReplyKeyboardMarkup(
+            [
+                [Commands.CANCEL],
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        ),
+    )
     return GET_PICTURE
 
 
 async def download_attachment(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     if update.effective_message.photo or update.effective_message.sticker:
         attachments = update.effective_message.effective_attachment
@@ -71,7 +91,12 @@ async def download_attachment(
         await update.message.reply_text(
             "Получил картину. Что напишем сверху?",
             reply_markup=ReplyKeyboardMarkup(
-                [[Commands.CANCEL], [Commands.NOTHING]], resize_keyboard=True
+                [
+                    [Commands.NOTHING],
+                    [Commands.CANCEL],
+                ],
+                resize_keyboard=True,
+                one_time_keyboard=True,
             ),
         )
 
@@ -80,16 +105,31 @@ async def download_attachment(
 
 async def get_first_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["first_line"] = update.message.text
+
     if update.message.text == Commands.NOTHING:
         context.user_data["first_line"] = ""
-    await update.message.reply_text("Понял. Что напишем внизу?")
+
+    await update.message.reply_text(
+        "Понял. Что напишем внизу?",
+        reply_markup=ReplyKeyboardMarkup(
+            [
+                [Commands.NOTHING],
+                [Commands.CANCEL],
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        ),
+    )
+
     return GET_SECOND_LINE
 
 
 async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["second_line"] = update.message.text
+
     if update.message.text == Commands.NOTHING:
         context.user_data["second_line"] = ""
+
     path = MemeEngine(f"./tmp/{update.effective_user.username}").make_meme(
         context.user_data["picture_path"],
         context.user_data["first_line"].strip(),
@@ -101,9 +141,41 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await context.bot.send_photo(
         chat_id=update.message.chat_id,
         photo=path,
-        caption="По-красоте...",
         reply_markup=ReplyKeyboardMarkup(
-            [[Commands.MAKE_MEM]], one_time_keyboard=True, resize_keyboard=True
+            [[Commands.MAKE_MEM, Commands.MAKE_DEMOTIVATOR]],
+            one_time_keyboard=True,
+            resize_keyboard=True,
+        ),
+    )
+
+    context.user_data.clear()
+
+    return ConversationHandler.END
+
+
+async def get_second_demotivator_line(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    context.user_data["second_line"] = update.message.text
+
+    if update.message.text == Commands.NOTHING:
+        context.user_data["second_line"] = ""
+
+    path = MemeEngine(f"./tmp/{update.effective_user.username}").make_demotivator(
+        context.user_data["picture_path"],
+        context.user_data["first_line"].strip(),
+        context.user_data["second_line"].strip(),
+    )
+
+    os.remove(context.user_data["picture_path"])
+
+    await context.bot.send_photo(
+        chat_id=update.message.chat_id,
+        photo=path,
+        reply_markup=ReplyKeyboardMarkup(
+            [[Commands.MAKE_MEM, Commands.MAKE_DEMOTIVATOR]],
+            one_time_keyboard=True,
+            resize_keyboard=True,
         ),
     )
 
@@ -112,28 +184,26 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancels and ends the conversation."""
     await update.message.reply_text(
         "Ок...",
         reply_markup=ReplyKeyboardMarkup(
-            [[Commands.MAKE_MEM]], one_time_keyboard=True, resize_keyboard=True
+            [[Commands.MAKE_MEM, Commands.MAKE_DEMOTIVATOR]],
+            one_time_keyboard=True,
+            resize_keyboard=True,
         ),
     )
     if context.user_data.get("picture_path"):
         os.remove(context.user_data["picture_path"])
     context.user_data.clear()
+
     return ConversationHandler.END
 
 
 async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_html(
-        text=f"Тут: https://t.me/addstickers/memaker_templates",
+        text="https://t.me/addstickers/memaker_templates",
         reply_to_message_id=update.message.message_id,
     )
-
-
-async def stats():
-    pass
 
 
 def main() -> None:
@@ -162,6 +232,30 @@ def main() -> None:
                 GET_SECOND_LINE: [
                     MessageHandler(filters.Regex(Commands.CANCEL), cancel),
                     MessageHandler(filters.TEXT, get_second_line),
+                ],
+            },
+            fallbacks=[MessageHandler(filters.Regex(Commands.CANCEL), cancel)],
+        ),
+    )
+
+    application.add_handler(
+        ConversationHandler(
+            entry_points=[
+                MessageHandler(filters.Regex(Commands.MAKE_DEMOTIVATOR), demotivator),
+            ],
+            states={
+                GET_PICTURE: [
+                    MessageHandler(filters.Regex(Commands.CANCEL), cancel),
+                    MessageHandler(filters.ATTACHMENT, download_attachment),
+                    MessageHandler(filters.FORWARDED, download_attachment),
+                ],
+                GET_FIRST_LINE: [
+                    MessageHandler(filters.Regex(Commands.CANCEL), cancel),
+                    MessageHandler(filters.TEXT, get_first_line),
+                ],
+                GET_SECOND_LINE: [
+                    MessageHandler(filters.Regex(Commands.CANCEL), cancel),
+                    MessageHandler(filters.TEXT, get_second_demotivator_line),
                 ],
             },
             fallbacks=[MessageHandler(filters.Regex(Commands.CANCEL), cancel)],

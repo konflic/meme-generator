@@ -6,6 +6,6 @@ env/
 __pycache__/
 TOKEN
 tmp/
-templates/added/
-templates/output/
-templates/raw
+data_processor/added/
+data_processor/output/
+data_processor/raw
