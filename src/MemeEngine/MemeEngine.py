@@ -49,7 +49,6 @@ class MemeEngine:
             image_height = self.image_height
 
         font_size = int(image_height / self.proportion)
-
         return ImageFont.truetype(self.font, size=font_size)
 
     def draw_demotivator_line(
@@ -108,6 +107,7 @@ class MemeEngine:
             IMAGE_HEIGHT - IMAGE_HEIGHT * BORDERS_RATE,
         )
 
+        self.proportion = PORTION_OF_HEIGHT
         self.__set_image_height(IMAGE_HEIGHT)
         STROKE_WIDTH = 2 + int(IMAGE_HEIGHT / 500)
 
@@ -218,10 +218,10 @@ if __name__ == "__main__":
     LONG_LINE = "This very very very long long long"
     SHORT = "но потом всё"
 
-    # MemeEngine("./tmp").make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, SHORT)
-    # MemeEngine("./tmp").make_meme("../stuff/26am_2.jpg", SHORT, VERY_LONG_LINE)
-    # MemeEngine("./tmp").make_meme("../stuff/vertical.jpg", VERY_LONG_LINE, VERY_LONG_LINE)
+    MemeEngine("./tmp").make_meme("../stuff/26am_1.jpg", VERY_LONG_LINE, SHORT)
+    MemeEngine("./tmp").make_meme("../stuff/26am_2.jpg", SHORT, VERY_LONG_LINE)
+    MemeEngine("./tmp").make_meme("../stuff/vertical.jpg", VERY_LONG_LINE, VERY_LONG_LINE)
 
     # MemeEngine("./tmp").make_demotivator("../stuff/26am_1.jpg", SHORT, SHORT)
-    MemeEngine("./tmp").make_demotivator("../stuff/horizontal.png", SHORT, LONG_LINE)
-    MemeEngine("./tmp").make_demotivator("../stuff/vertical.jpg", SHORT, LONG_LINE)
+    # MemeEngine("./tmp").make_demotivator("../stuff/horizontal.png", SHORT, LONG_LINE)
+    # MemeEngine("./tmp").make_demotivator("../stuff/vertical.jpg", SHORT, LONG_LINE)
