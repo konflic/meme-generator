@@ -131,8 +131,6 @@ class MemeEngine:
 
                 wrapped_lines = [" ".join(words[:half]), " ".join(words[half:])]
 
-                self.proportion += 1
-
                 text = "\n".join(wrapped_lines)
                 _, _, full_text_w, full_text_h = draw.multiline_textbbox(
                     (0, 0),
@@ -151,7 +149,7 @@ class MemeEngine:
         y = BORDER
 
         if position == "bottom":
-            y = IMAGE_HEIGHT - (full_text_h - BORDER)
+            y = IMAGE_HEIGHT - full_text_h
 
         draw.multiline_text(
             (x, y),
