@@ -44,7 +44,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
-        "Давай сделаем мемасик. Присылай картинку!",
+        "Давай сделаем мемасик. Присылай картинку!\nПерешли из другого чата, загрузи свою или бери из шаблонов \u2B07",
         reply_markup=ReplyKeyboardMarkup(
             [
                 [Commands.TEMPLATES],
@@ -88,7 +88,7 @@ async def download_attachment(
         context.user_data["picture_path"] = tmp_file_path
 
         await update.message.reply_text(
-            "Получил картину. Что напишем сверху?\nЕсли оставим пустым то жми /ничего \u2B07.",
+            "Получил картину. Что напишем сверху?\nЕсли оставим пустым то жми /ничего \u2B07",
             reply_markup=ReplyKeyboardMarkup(
                 [
                     [Commands.NOTHING],
