@@ -33,7 +33,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await update.message.reply_html(
         f"Привет, {user.username}! Я бот для создания мемасиков!\n"
-        f"Выбирай тип мема \u2B07 и погнали!",
+        f"Используй команды \u2B07 и следуй моим подсказкам.",
         reply_markup=ReplyKeyboardMarkup(
             [[Commands.MAKE_MEM, Commands.MAKE_DEMOTIVATOR]],
             one_time_keyboard=True,
@@ -88,7 +88,7 @@ async def download_attachment(
         context.user_data["picture_path"] = tmp_file_path
 
         await update.message.reply_text(
-            "Получил картину. Что напишем сверху?",
+            "Получил картину. Что напишем сверху?\nЕсли оставим пустым то жми /ничего \u2B07.",
             reply_markup=ReplyKeyboardMarkup(
                 [
                     [Commands.NOTHING],
@@ -109,7 +109,7 @@ async def get_first_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         context.user_data["first_line"] = ""
 
     await update.message.reply_text(
-        "Понял. Что напишем внизу?",
+        "Понял. Что напишем внизу?\nЕсли оставим пустым то жми /ничего \u2B07",
         reply_markup=ReplyKeyboardMarkup(
             [
                 [Commands.NOTHING],
