@@ -72,7 +72,7 @@ async def demotivator(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 
 async def download_attachment(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     if update.effective_message.photo or update.effective_message.sticker:
         attachments = update.effective_message.effective_attachment
@@ -153,7 +153,7 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def get_second_demotivator_line(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     context.user_data["second_line"] = update.message.text
 
@@ -209,6 +209,7 @@ def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
+
     application.add_handler(
         MessageHandler(filters.Regex(Commands.TEMPLATES), templates)
     )
@@ -259,6 +260,10 @@ def main() -> None:
             },
             fallbacks=[MessageHandler(filters.Regex(Commands.CANCEL), cancel)],
         ),
+    )
+
+    application.add_handler(
+        MessageHandler(filters.TEXT, start)
     )
 
     application.run_polling()
