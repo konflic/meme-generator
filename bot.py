@@ -217,7 +217,9 @@ async def admin_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
             #     c_time = datetime.datetime.fromtimestamp(current_timestamp).strftime("%Y-%m-%d")
             #     await update.message.reply_text(f"({c_time})")
             if file.is_dir():
-                response = f"{file.name} {len(list(file.iterdir()))}"
+                response = f"{file.name} [{len(list(file.iterdir()))}] last:"
+                latest_file = max(file.iterdir(), key=os.path.getctime)
+                response += f" {datetime.datetime.fromtimestamp(latest_file.stat().st_ctime).strftime('%Y-%m-%d')}"
                 await update.message.reply_text(response)
 
 
