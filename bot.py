@@ -1,3 +1,4 @@
+import datetime
 import os
 
 with open("TOKEN") as f:
@@ -5,6 +6,7 @@ with open("TOKEN") as f:
 
 import requests
 import uuid
+import pathlib
 
 from src.MemeEngine import MemeEngine
 from telegram import Update, ReplyKeyboardMarkup
@@ -76,7 +78,7 @@ async def download_attachment(
 ) -> None:
     if update.effective_message.photo or update.effective_message.sticker:
         attachments = update.effective_message.effective_attachment
-        attachment = attachments[-1] if type(attachments) == list else attachments
+        attachment = attachments[-1] if type(attachments) == tuple else attachments
         file_info = await context.bot.get_file(file_id=attachment.file_id)
 
         response = requests.get(file_info.file_path, allow_redirects=True)
@@ -84,7 +86,7 @@ async def download_attachment(
         os.makedirs(f"tmp/{update.effective_user.username}", exist_ok=True)
         tmp_file_path = f"tmp/{update.effective_user.username}/{uuid.uuid4()}.webp"
 
-        open(tmp_file_path, "wb").write(response.content)
+        open(tmp_file_path, "wb+").write(response.content)
         context.user_data["picture_path"] = tmp_file_path
 
         await update.message.reply_text(
@@ -147,8 +149,11 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         ),
     )
 
-    context.user_data.clear()
+    await context.bot.send_message(
+        chat_id=156109367, text=f"@{update.effective_user.username} just created a meme!"
+    )
 
+    context.user_data.clear()
     return ConversationHandler.END
 
 
@@ -204,11 +209,23 @@ async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_to_message_id=update.message.message_id,
     )
 
+async def admin_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.username == "s_amurai":
+        for file in pathlib.Path("./tmp/").resolve().rglob("*"):
+            if file.is_file():
+                current_timestamp = file.stat().st_ctime
+                c_time = datetime.datetime.fromtimestamp(current_timestamp).strftime("%Y-%m-%d")
+                await update.message.reply_text(f"({c_time})")
+            if file.is_dir():
+                await update.message.reply_text(file.name)
+
+
 
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("secret", admin_list))
 
     application.add_handler(
         MessageHandler(filters.Regex(Commands.TEMPLATES), templates)

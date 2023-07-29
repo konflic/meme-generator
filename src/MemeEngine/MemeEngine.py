@@ -83,7 +83,7 @@ class MemeEngine:
 
         if position == "bottom":
             y = int(image_h + image_h * 0.27)
-            x = int((IMAGE_WIDTH - full_text_w / 2) / 3) + IMAGE_WIDTH * BORDERS_RATE
+            x = int((IMAGE_WIDTH - full_text_w / 1.5) / 2) + IMAGE_WIDTH * BORDERS_RATE
 
         draw.multiline_text(
             (x, y),
