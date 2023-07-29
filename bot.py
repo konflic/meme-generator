@@ -212,15 +212,11 @@ async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.username == "s_amurai":
         for file in pathlib.Path("./tmp/").resolve().rglob("*"):
-            # if file.is_file():
-            #     current_timestamp = file.stat().st_ctime
-            #     c_time = datetime.datetime.fromtimestamp(current_timestamp).strftime("%Y-%m-%d")
-            #     await update.message.reply_text(f"({c_time})")
             if file.is_dir():
                 response = f"{file.name} [{len(list(file.iterdir()))}] last:"
                 latest_file = max(file.iterdir(), key=os.path.getctime)
                 response += f" {datetime.datetime.fromtimestamp(latest_file.stat().st_ctime).strftime('%Y-%m-%d')}"
-                await update.message.reply_text(response)
+                await update.message.reply_text(response, disable_notification=True)
 
 
 
