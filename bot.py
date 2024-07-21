@@ -28,6 +28,7 @@ class Commands:
     MAKE_DEMOTIVATOR = "/демотиватор"
     TEMPLATES = "/шаблоны"
     NOTHING = "/ничего"
+    PRIVACY = "/privacy"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -55,6 +56,8 @@ async def mem(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             resize_keyboard=True,
             one_time_keyboard=True,
         ),
+        read_timeout=30,
+        pool_timeout=30
     )
     return GET_PICTURE
 
@@ -69,6 +72,8 @@ async def demotivator(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
             resize_keyboard=True,
             one_time_keyboard=True,
         ),
+        read_timeout=30,
+        pool_timeout=30
     )
     return GET_PICTURE
 
@@ -99,6 +104,8 @@ async def download_attachment(
                 resize_keyboard=True,
                 one_time_keyboard=True,
             ),
+            read_timeout=30,
+            pool_timeout=30
         )
 
         return GET_FIRST_LINE
@@ -120,6 +127,8 @@ async def get_first_line(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             resize_keyboard=True,
             one_time_keyboard=True,
         ),
+        pool_timeout=30,
+        read_timeout=30
     )
 
     return GET_SECOND_LINE
@@ -147,6 +156,8 @@ async def get_second_line(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             one_time_keyboard=True,
             resize_keyboard=True,
         ),
+        read_timeout=30,
+        pool_timeout=30
     )
 
     await context.bot.send_message(
@@ -181,6 +192,8 @@ async def get_second_demotivator_line(
             one_time_keyboard=True,
             resize_keyboard=True,
         ),
+        read_timeout=30,
+        pool_timeout=30
     )
 
     context.user_data.clear()
@@ -195,6 +208,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             one_time_keyboard=True,
             resize_keyboard=True,
         ),
+        read_timeout=30,
+        pool_timeout=30
     )
     if context.user_data.get("picture_path"):
         os.remove(context.user_data["picture_path"])
@@ -207,7 +222,10 @@ async def templates(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_html(
         text="https://t.me/addstickers/memaker_templates\nhttps://t.me/addstickers/memaker_templates2",
         reply_to_message_id=update.message.message_id,
+        read_timeout=30,
+        pool_timeout=30
     )
+
 
 async def admin_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.username == "s_amurai":
@@ -219,12 +237,19 @@ async def admin_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(response, disable_notification=True)
 
 
+async def privacy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_html(
+        text="Bot does not collect, proceed or store any personal data.",
+        reply_to_message_id=update.message.message_id,
+    )
+
 
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("secret", admin_list))
+    application.add_handler(CommandHandler("privacy", privacy))
 
     application.add_handler(
         MessageHandler(filters.Regex(Commands.TEMPLATES), templates)
