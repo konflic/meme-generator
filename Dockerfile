@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /bot
 
@@ -13,3 +13,4 @@ RUN pip install -r requirements.txt
 COPY . .
 
 CMD ["python", "bot.py"]
+X
